@@ -1,21 +1,20 @@
 'use client'
 
-import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { ClothingUploadForm } from '@/components/clothing-upload-form'
 import { WardrobeGallery } from '@/components/wardrobe-gallery'
 import { OutfitGenerator } from '@/components/outfit-generator'
-import type { ClothingItem } from '@/lib/types'
+import { useLocalWardrobe } from '@/hooks/use-local-wardrobe'
 
 export default function Home() {
-  const [wardrobe, setWardrobe] = useState<ClothingItem[]>([])
-
-  const handleSave = useCallback((newItems: ClothingItem[]) => {
-    setWardrobe((prev) => [...prev, ...newItems])
-  }, [])
+  const { wardrobe, addItems, removeItem } = useLocalWardrobe()
 
   const scrollToForm = () => {
     document.getElementById('upload-form')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const scrollToGenerator = () => {
+    document.getElementById('outfit-generator')?.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
@@ -85,6 +84,7 @@ export default function Home() {
             <Button
               variant="outline"
               size="lg"
+              onClick={scrollToGenerator}
               className="rounded-full px-8 py-6 text-base font-light border border-muted text-foreground hover:bg-card transition-all duration-300"
             >
               Generate Outfit
@@ -97,13 +97,13 @@ export default function Home() {
       <div className="w-full h-px bg-border" aria-hidden="true" />
 
       {/* Outfit Generator Section */}
-      <OutfitGenerator />
+      <OutfitGenerator wardrobe={wardrobe} />
 
       {/* Divider */}
       <div className="w-full h-px bg-border" aria-hidden="true" />
 
       {/* Wardrobe Gallery Section */}
-      <WardrobeGallery items={wardrobe} />
+      <WardrobeGallery items={wardrobe} onRemoveItem={removeItem} />
 
       {/* Divider */}
       <div className="w-full h-px bg-border" aria-hidden="true" />
@@ -114,7 +114,7 @@ export default function Home() {
         className="w-full py-20 md:py-28 px-4 md:px-8 bg-[#f7f7f7] scroll-mt-8"
         aria-label="Formulario de carga de prendas"
       >
-        <ClothingUploadForm onSave={handleSave} />
+        <ClothingUploadForm onSave={addItems} />
       </section>
 
       {/* Footer */}

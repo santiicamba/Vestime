@@ -250,6 +250,7 @@ interface ClothingUploadFormProps {
 export function ClothingUploadForm({ onSave }: ClothingUploadFormProps) {
   const [items, setItems] = useState<ClothingItem[]>([createEmptyItem()])
   const [submitted, setSubmitted] = useState(false)
+  const [validationError, setValidationError] = useState(false)
 
   const handleChange = useCallback(
     (id: string, field: keyof ClothingItem, value: string | File | null) => {
@@ -272,18 +273,23 @@ export function ClothingUploadForm({ onSave }: ClothingUploadFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Map internal items to the shared ClothingItem type and pass to parent
-    const saved: SharedClothingItem[] = items
-      .filter((item) => item.tipo && item.color && item.estilo)
-      .map((item) => ({
-        id: item.id,
-        tipo: item.tipo,
-        color: item.color,
-        estilo: item.estilo,
-        imagePreview: item.imagePreview,
-      }))
+    // Validate: every item must have tipo, color and estilo filled
+    const allValid = items.every((item) => item.tipo && item.color && item.estilo)
+    if (!allValid) {
+      setValidationError(true)
+      setTimeout(() => setValidationError(false), 4000)
+      return
+    }
+    setValidationError(false)
 
-    if (saved.length === 0) return
+    // Map internal items to the shared ClothingItem type and pass to parent
+    const saved: SharedClothingItem[] = items.map((item) => ({
+      id: item.id,
+      tipo: item.tipo,
+      color: item.color,
+      estilo: item.estilo,
+      image: item.imagePreview,
+    }))
 
     onSave?.(saved)
 
@@ -331,17 +337,24 @@ export function ClothingUploadForm({ onSave }: ClothingUploadFormProps) {
       </button>
 
       {/* Submit */}
-      <div className="mt-8 flex flex-col sm:flex-row items-center gap-4">
-        <Button
-          type="submit"
-          size="lg"
-          className="w-full sm:w-auto rounded-full px-10 py-6 text-base font-light bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] transition-all duration-300"
-        >
-          {submitted ? 'Guardado en el armario!' : `Guardar ${items.length > 1 ? `${items.length} prendas` : 'prenda'}`}
-        </Button>
-        <span className="text-sm text-[#a0a0a0] font-light">
-          {items.length} {items.length === 1 ? 'prenda' : 'prendas'} agregadas
-        </span>
+      <div className="mt-8 flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full sm:w-auto rounded-full px-10 py-6 text-base font-light bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] transition-all duration-300"
+          >
+            {submitted ? 'Guardado en el armario!' : `Guardar ${items.length > 1 ? `${items.length} prendas` : 'prenda'}`}
+          </Button>
+          <span className="text-sm text-[#a0a0a0] font-light">
+            {items.length} {items.length === 1 ? 'prenda' : 'prendas'} agregadas
+          </span>
+        </div>
+        {validationError && (
+          <p className="text-sm font-light text-red-500 animate-in fade-in slide-in-from-top-1 duration-200">
+            Complet&aacute; tipo, color y estilo en todas las prendas antes de guardar.
+          </p>
+        )}
       </div>
     </form>
   )

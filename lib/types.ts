@@ -3,5 +3,5 @@ export interface ClothingItem {
   tipo: string
   color: string
   estilo: string
-  imagePreview: string | null
+  image: string | null
 }
