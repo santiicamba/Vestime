@@ -60,7 +60,7 @@ export function useLocalWardrobe() {
     const storableItems: ClothingItem[] = await Promise.all(
       newItems.map(async (item) => ({
         ...item,
-        imagePreview: await toStorableImage(item.imagePreview),
+        image: await toStorableImage(item.image),
       }))
     )
 

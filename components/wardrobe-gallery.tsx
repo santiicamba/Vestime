@@ -36,7 +36,7 @@ export function WardrobeGallery({ items = [], onRemoveItem }: WardrobeGalleryPro
             {items.map((item) => (
               <ClothingCard
                 key={item.id}
-                image={item.imagePreview ?? null}
+                image={item.image ?? null}
                 tipo={item.tipo}
                 color={item.color}
                 estilo={item.estilo}
@@ -47,12 +47,21 @@ export function WardrobeGallery({ items = [], onRemoveItem }: WardrobeGalleryPro
         ) : (
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
-              <p className="text-foreground text-lg font-light mb-4">
-                Tu guardarropa está vacío
+              <p className="text-foreground text-lg font-light mb-3">
+                Tu guardarropa est&aacute; vac&iacute;o
               </p>
-              <p className="text-muted-foreground font-light">
-                Comienza a agregar prendas para empezar
+              <p className="text-muted-foreground font-light mb-8">
+                Comenzá a agregar prendas para empezar
               </p>
+              <button
+                type="button"
+                onClick={() =>
+                  document.getElementById('upload-form')?.scrollIntoView({ behavior: 'smooth' })
+                }
+                className="rounded-full px-8 py-3 text-sm font-light bg-foreground text-background hover:bg-foreground/90 transition-all duration-300"
+              >
+                Agregar prendas
+              </button>
             </div>
           </div>
         )}

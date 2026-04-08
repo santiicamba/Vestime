@@ -13,6 +13,10 @@ export default function Home() {
     document.getElementById('upload-form')?.scrollIntoView({ behavior: 'smooth' })
   }
 
+  const scrollToGenerator = () => {
+    document.getElementById('outfit-generator')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Hero Section */}
@@ -80,6 +84,7 @@ export default function Home() {
             <Button
               variant="outline"
               size="lg"
+              onClick={scrollToGenerator}
               className="rounded-full px-8 py-6 text-base font-light border border-muted text-foreground hover:bg-card transition-all duration-300"
             >
               Generate Outfit
@@ -92,7 +97,7 @@ export default function Home() {
       <div className="w-full h-px bg-border" aria-hidden="true" />
 
       {/* Outfit Generator Section */}
-      <OutfitGenerator />
+      <OutfitGenerator wardrobe={wardrobe} />
 
       {/* Divider */}
       <div className="w-full h-px bg-border" aria-hidden="true" />

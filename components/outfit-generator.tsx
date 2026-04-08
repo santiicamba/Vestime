@@ -26,6 +26,7 @@ import {
   Check,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import type { ClothingItem as WardrobeItem } from '@/lib/types'
 
 // Sample wardrobe items to send to API
 const WARDROBE_ITEMS = [
@@ -105,7 +106,21 @@ function WeatherIcon({ icon, className }: { icon: string; className?: string }) 
   }
 }
 
-export function OutfitGenerator() {
+interface OutfitGeneratorProps {
+  wardrobe?: WardrobeItem[]
+}
+
+export function OutfitGenerator({ wardrobe = [] }: OutfitGeneratorProps) {
+  // Use real wardrobe if available, fall back to demo items
+  const activeWardrobe = wardrobe.length > 0
+    ? wardrobe.map((item) => ({
+        id: item.id,
+        tipo: item.tipo,
+        color: item.color,
+        estilo: item.estilo,
+        image: item.image ?? `https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop`,
+      }))
+    : WARDROBE_ITEMS
   const [status, setStatus] = useState<GenerationStatus>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [includeAccs, setIncludeAccs] = useState(false)
@@ -165,9 +180,9 @@ export function OutfitGenerator() {
   }
 
   const findItemById = (id: string): OutfitItem | undefined => {
-    const allItems = [...WARDROBE_ITEMS, ...ACCESSORY_ITEMS]
+    const allItems = [...activeWardrobe, ...ACCESSORY_ITEMS]
     const item = allItems.find((i) => i.id === id)
-    if (item) return { ...item, image: item.image }
+    if (item) return { ...item }
     return undefined
   }
 
@@ -178,8 +193,8 @@ export function OutfitGenerator() {
 
     try {
       const itemsToSend = includeAccs
-        ? [...WARDROBE_ITEMS, ...ACCESSORY_ITEMS]
-        : WARDROBE_ITEMS
+        ? [...activeWardrobe, ...ACCESSORY_ITEMS]
+        : activeWardrobe
 
       // Build weather data for API if enabled
       const weatherPayload = includeWeather && weather
@@ -234,7 +249,6 @@ export function OutfitGenerator() {
 
         setGeneratedOutfit(outfitItems)
         setPreviousOutfit(outfitItems)
-        setPinnedItems([])
         setOutfitPalette(data.palette || 'Monochromatic')
         setOutfitOccasion(data.occasion || 'Everyday')
         setStatus('success')
@@ -261,9 +275,10 @@ export function OutfitGenerator() {
       setStatus('error')
       setErrorMessage('AI no disponible - usando combinación local')
     } finally {
+      setPinnedItems([])
       setTimeout(() => setAnimating(false), 100)
     }
-  }, [includeAccs, includeWeather, weather, weatherRecommendations, fallbackIndex, pinnedItems])
+  }, [includeAccs, includeWeather, weather, weatherRecommendations, fallbackIndex, pinnedItems, activeWardrobe])
 
   const handleRetry = () => {
     setFallbackIndex((prev) => prev + 1)
