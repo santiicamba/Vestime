@@ -23,6 +23,7 @@ export async function POST(req: Request) {
       user_preferences,
       weather_data,
       wardrobe_items,
+      pinned_item_ids,
     }: {
       user_preferences?: {
         estilo?: string
@@ -41,6 +42,7 @@ export async function POST(req: Request) {
         estilo: string
         image?: string
       }>
+      pinned_item_ids?: string[]
     } = body
 
     // Build prompt based on user preferences and wardrobe
@@ -61,6 +63,18 @@ ${itemsDescription || 'No items provided - suggest a general outfit structure.'}
     }
     if (user_preferences?.color) {
       contextPrompt += `\nPreferred color palette: ${user_preferences.color}`
+    }
+
+    if (pinned_item_ids && pinned_item_ids.length > 0) {
+      const pinnedDescriptions = (wardrobe_items || [])
+        .filter((item) => pinned_item_ids.includes(item.id))
+        .map((item) => `- ${item.tipo} (${item.color}, ${item.estilo}) [id: ${item.id}]`)
+        .join('\n')
+
+      contextPrompt += `\n\nPINNED ITEMS — MANDATORY:
+The user wants to repeat the following item(s) from their previous outfit. These MUST appear in the output regardless of other constraints:
+${pinnedDescriptions}
+Build the rest of the outfit to complement these pinned items.`
     }
 
     if (weather_data?.active && weather_data.temp !== undefined) {

@@ -23,6 +23,7 @@ import {
   Droplets,
   Thermometer,
   MapPin,
+  Check,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -115,6 +116,10 @@ export function OutfitGenerator() {
   const [animating, setAnimating] = useState(false)
   const [fallbackIndex, setFallbackIndex] = useState(0)
   
+  // Pinned items from previous outfit
+  const [previousOutfit, setPreviousOutfit] = useState<OutfitItem[]>([])
+  const [pinnedItems, setPinnedItems] = useState<string[]>([])
+
   // Weather state
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [weatherLoading, setWeatherLoading] = useState(false)
@@ -197,6 +202,7 @@ export function OutfitGenerator() {
           },
           weather_data: weatherPayload,
           wardrobe_items: itemsToSend,
+          pinned_item_ids: pinnedItems,
         }),
       })
 
@@ -227,6 +233,8 @@ export function OutfitGenerator() {
           .filter(Boolean)
 
         setGeneratedOutfit(outfitItems)
+        setPreviousOutfit(outfitItems)
+        setPinnedItems([])
         setOutfitPalette(data.palette || 'Monochromatic')
         setOutfitOccasion(data.occasion || 'Everyday')
         setStatus('success')
@@ -255,7 +263,7 @@ export function OutfitGenerator() {
     } finally {
       setTimeout(() => setAnimating(false), 100)
     }
-  }, [includeAccs, includeWeather, weather, weatherRecommendations, fallbackIndex])
+  }, [includeAccs, includeWeather, weather, weatherRecommendations, fallbackIndex, pinnedItems])
 
   const handleRetry = () => {
     setFallbackIndex((prev) => prev + 1)
@@ -465,6 +473,75 @@ export function OutfitGenerator() {
               </div>
             </div>
           </div>
+
+          {/* Pinned items from previous outfit */}
+          {previousOutfit.length > 0 && (
+            <div className="flex flex-col gap-3 animate-in fade-in duration-500">
+              <span className="text-sm font-light text-[#a0a0a0]">
+                ¿Repetir prenda del outfit anterior?
+              </span>
+              <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
+                {previousOutfit.map((item) => {
+                  const isPinned = pinnedItems.includes(item.id)
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() =>
+                        setPinnedItems((prev) =>
+                          isPinned ? prev.filter((id) => id !== item.id) : [...prev, item.id]
+                        )
+                      }
+                      className={cn(
+                        'relative flex-shrink-0 flex flex-col items-center gap-1.5 p-2 rounded-xl border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground',
+                        isPinned
+                          ? 'border-foreground bg-[#1a1a1a]'
+                          : 'border-[#2a2a2a] bg-[#0f0f0f] hover:border-[#404040]'
+                      )}
+                      aria-pressed={isPinned}
+                      aria-label={`${isPinned ? 'Deseleccionar' : 'Seleccionar'} ${item.tipo} ${item.color}`}
+                    >
+                      {/* Thumbnail */}
+                      <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-[#1a1a1a] flex-shrink-0">
+                        <Image
+                          src={item.image}
+                          alt={`${item.tipo} ${item.color}`}
+                          fill
+                          className="object-cover"
+                          sizes="40px"
+                        />
+                        {/* Check overlay */}
+                        {isPinned && (
+                          <div className="absolute inset-0 bg-foreground/30 flex items-center justify-center">
+                            <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                          </div>
+                        )}
+                      </div>
+                      {/* Label */}
+                      <div className="text-center">
+                        <p
+                          className={cn(
+                            'text-[10px] font-light leading-tight transition-colors duration-200 whitespace-nowrap',
+                            isPinned ? 'text-foreground' : 'text-[#606060]'
+                          )}
+                        >
+                          {item.tipo}
+                        </p>
+                        <p className="text-[10px] text-[#404040] leading-tight">
+                          {item.color}
+                        </p>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+              {pinnedItems.length > 0 && (
+                <p className="text-xs font-light text-[#505050]">
+                  {pinnedItems.length} prenda{pinnedItems.length > 1 ? 's' : ''} fijada{pinnedItems.length > 1 ? 's' : ''} — aparecerá en el próximo outfit
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Status Messages */}
           {status === 'success' && (
