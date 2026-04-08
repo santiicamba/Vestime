@@ -67,7 +67,16 @@ ${itemsDescription || 'No items provided - suggest a general outfit structure.'}
       contextPrompt += `\n\nWeather conditions:
 - Temperature: ${weather_data.temp}°C
 - Condition: ${weather_data.condition || 'Clear'}
-Consider weather-appropriate clothing.`
+- Humidity: ${weather_data.humidity || 'N/A'}%
+- Wind: ${weather_data.wind || 'N/A'} km/h
+
+Weather-based recommendations: ${weather_data.recommendations?.join(', ') || 'Consider weather-appropriate clothing'}
+
+IMPORTANT: Prioritize items suitable for the current weather:
+- If cold (< 15°C): Include warm layers like Tapado, Buzo, Chaqueta
+- If rainy: Prioritize water-resistant items
+- If hot (> 25°C): Suggest light, breathable fabrics
+- If windy: Include wind-blocking layers`
     }
 
     contextPrompt += `

@@ -1,8 +1,29 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Image from 'next/image'
-import { RefreshCw, Sparkles, ShirtIcon, AlertCircle, CheckCircle2, CloudSun } from 'lucide-react'
+import {
+  RefreshCw,
+  Sparkles,
+  ShirtIcon,
+  AlertCircle,
+  CheckCircle2,
+  CloudSun,
+  Sun,
+  Moon,
+  Cloud,
+  CloudRain,
+  CloudSnow,
+  CloudLightning,
+  CloudDrizzle,
+  CloudFog,
+  Snowflake,
+  CloudMoon,
+  Wind,
+  Droplets,
+  Thermometer,
+  MapPin,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // Sample wardrobe items to send to API
@@ -40,6 +61,49 @@ type OutfitItem = {
 
 type GenerationStatus = 'idle' | 'loading' | 'success' | 'error'
 
+type WeatherData = {
+  location: string
+  region: string
+  temp: number
+  feelsLike: number
+  humidity: number
+  wind: number
+  condition: string
+  conditionCode: number
+  isDay: boolean
+  icon: string
+}
+
+// Weather icon component
+function WeatherIcon({ icon, className }: { icon: string; className?: string }) {
+  const iconProps = { className: cn('w-6 h-6', className) }
+  
+  switch (icon) {
+    case 'sun':
+      return <Sun {...iconProps} />
+    case 'moon':
+      return <Moon {...iconProps} />
+    case 'cloud':
+      return <Cloud {...iconProps} />
+    case 'cloud-sun':
+      return <CloudSun {...iconProps} />
+    case 'cloud-moon':
+      return <CloudMoon {...iconProps} />
+    case 'cloud-rain':
+      return <CloudRain {...iconProps} />
+    case 'cloud-drizzle':
+      return <CloudDrizzle {...iconProps} />
+    case 'cloud-fog':
+      return <CloudFog {...iconProps} />
+    case 'cloud-lightning':
+      return <CloudLightning {...iconProps} />
+    case 'snowflake':
+      return <Snowflake {...iconProps} />
+    default:
+      return <Cloud {...iconProps} />
+  }
+}
+
 export function OutfitGenerator() {
   const [status, setStatus] = useState<GenerationStatus>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -50,6 +114,50 @@ export function OutfitGenerator() {
   const [outfitOccasion, setOutfitOccasion] = useState<string>('')
   const [animating, setAnimating] = useState(false)
   const [fallbackIndex, setFallbackIndex] = useState(0)
+  
+  // Weather state
+  const [weather, setWeather] = useState<WeatherData | null>(null)
+  const [weatherLoading, setWeatherLoading] = useState(false)
+  const [weatherRecommendations, setWeatherRecommendations] = useState<string[]>([])
+
+  // Fetch weather data when toggle is enabled
+  useEffect(() => {
+    if (includeWeather && !weather) {
+      fetchWeather()
+    }
+  }, [includeWeather])
+
+  const fetchWeather = async (location = 'Buenos Aires') => {
+    setWeatherLoading(true)
+    try {
+      const response = await fetch(`/api/weather?q=${encodeURIComponent(location)}`)
+      if (!response.ok) throw new Error('Weather fetch failed')
+      
+      const data = await response.json()
+      if (data.success) {
+        setWeather(data.weather)
+        setWeatherRecommendations(data.recommendations || [])
+      }
+    } catch (error) {
+      console.error('[v0] Weather fetch error:', error)
+      // Set fallback weather
+      setWeather({
+        location: 'Buenos Aires',
+        region: 'CABA',
+        temp: 20,
+        feelsLike: 18,
+        humidity: 65,
+        wind: 12,
+        condition: 'Parcialmente nublado',
+        conditionCode: 1003,
+        isDay: true,
+        icon: 'cloud-sun',
+      })
+      setWeatherRecommendations(['Buzo', 'Remera manga larga'])
+    } finally {
+      setWeatherLoading(false)
+    }
+  }
 
   const findItemById = (id: string): OutfitItem | undefined => {
     const allItems = [...WARDROBE_ITEMS, ...ACCESSORY_ITEMS]
@@ -68,6 +176,18 @@ export function OutfitGenerator() {
         ? [...WARDROBE_ITEMS, ...ACCESSORY_ITEMS]
         : WARDROBE_ITEMS
 
+      // Build weather data for API if enabled
+      const weatherPayload = includeWeather && weather
+        ? {
+            active: true,
+            temp: weather.temp,
+            condition: weather.condition,
+            humidity: weather.humidity,
+            wind: weather.wind,
+            recommendations: weatherRecommendations,
+          }
+        : { active: false }
+
       const response = await fetch('/api/outfit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -75,9 +195,7 @@ export function OutfitGenerator() {
           user_preferences: {
             estilo: 'Casual',
           },
-          weather_data: includeWeather
-            ? { active: true, temp: 18, condition: 'Partly cloudy' }
-            : { active: false },
+          weather_data: weatherPayload,
           wardrobe_items: itemsToSend,
         }),
       })
@@ -137,7 +255,7 @@ export function OutfitGenerator() {
     } finally {
       setTimeout(() => setAnimating(false), 100)
     }
-  }, [includeAccs, includeWeather, fallbackIndex])
+  }, [includeAccs, includeWeather, weather, weatherRecommendations, fallbackIndex])
 
   const handleRetry = () => {
     setFallbackIndex((prev) => prev + 1)
@@ -171,6 +289,89 @@ export function OutfitGenerator() {
             Generador de Outfits
           </h2>
         </div>
+
+        {/* Weather Card - Shows when toggle is enabled */}
+        {includeWeather && (
+          <div
+            className={cn(
+              'mb-8 rounded-2xl border border-[#1a1a1a] bg-[#0f0f0f] p-6 transition-all duration-500',
+              weatherLoading ? 'opacity-60' : 'opacity-100'
+            )}
+          >
+            {weatherLoading ? (
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#1a1a1a] animate-pulse" />
+                <div className="flex flex-col gap-2">
+                  <div className="w-32 h-4 rounded bg-[#1a1a1a] animate-pulse" />
+                  <div className="w-48 h-3 rounded bg-[#1a1a1a] animate-pulse" />
+                </div>
+              </div>
+            ) : weather ? (
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                {/* Main weather info */}
+                <div className="flex items-center gap-4">
+                  <div
+                    className={cn(
+                      'flex items-center justify-center w-14 h-14 rounded-2xl',
+                      weather.isDay ? 'bg-amber-500/10' : 'bg-indigo-500/10'
+                    )}
+                  >
+                    <WeatherIcon
+                      icon={weather.icon}
+                      className={cn(
+                        'w-7 h-7',
+                        weather.isDay ? 'text-amber-400' : 'text-indigo-400'
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-light text-foreground">
+                        {weather.temp}°
+                      </span>
+                      <span className="text-sm text-[#606060]">
+                        Sensación {weather.feelsLike}°
+                      </span>
+                    </div>
+                    <p className="text-sm text-[#808080] font-light">
+                      {weather.condition}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Weather details */}
+                <div className="flex flex-wrap items-center gap-6 text-sm">
+                  <div className="flex items-center gap-2 text-[#606060]">
+                    <MapPin className="w-4 h-4" />
+                    <span>{weather.location}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[#606060]">
+                    <Droplets className="w-4 h-4" />
+                    <span>{weather.humidity}%</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[#606060]">
+                    <Wind className="w-4 h-4" />
+                    <span>{weather.wind} km/h</span>
+                  </div>
+                </div>
+
+                {/* Recommendations pills */}
+                {weatherRecommendations.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {weatherRecommendations.slice(0, 4).map((rec, i) => (
+                      <span
+                        key={i}
+                        className="px-3 py-1 rounded-full text-xs font-light bg-[#1a1a1a] text-[#808080] border border-[#252525]"
+                      >
+                        {rec}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </div>
+        )}
 
         {/* Controls */}
         <div className="flex flex-col gap-6 mb-12">
@@ -234,7 +435,7 @@ export function OutfitGenerator() {
 
               {/* Weather Toggle */}
               <div className="flex items-center gap-3">
-                <CloudSun className="w-4 h-4 text-[#a0a0a0]" />
+                <Thermometer className="w-4 h-4 text-[#a0a0a0]" />
                 <span className="text-sm font-light text-[#a0a0a0]">Clima</span>
                 <button
                   type="button"
@@ -273,6 +474,9 @@ export function OutfitGenerator() {
               {outfitPalette && (
                 <span className="text-[#505050] ml-2">• Paleta: {outfitPalette}</span>
               )}
+              {includeWeather && weather && (
+                <span className="text-[#505050] ml-2">• Adaptado para {weather.temp}°C</span>
+              )}
             </div>
           )}
 
@@ -294,6 +498,11 @@ export function OutfitGenerator() {
               <p className="text-[#404040] font-light text-base">
                 Presioná el botón para generar tu outfit del día con IA
               </p>
+              {includeWeather && weather && (
+                <p className="text-[#505050] font-light text-sm">
+                  El clima actual ({weather.temp}°C, {weather.condition}) será considerado
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -311,7 +520,9 @@ export function OutfitGenerator() {
                 ))}
               </div>
               <p className="text-[#505050] font-light text-sm">
-                La IA está analizando tu guardarropa...
+                {includeWeather
+                  ? 'Analizando tu guardarropa y el clima actual...'
+                  : 'La IA está analizando tu guardarropa...'}
               </p>
             </div>
           </div>
@@ -349,6 +560,9 @@ export function OutfitGenerator() {
                     <p className="text-foreground text-sm font-light">
                       {item.tipo} • {item.color}
                     </p>
+                    {item.reason && (
+                      <p className="text-[#808080] text-xs mt-1">{item.reason}</p>
+                    )}
                   </div>
                 </div>
               ))}
