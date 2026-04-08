@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { ClothingUploadForm } from '@/components/clothing-upload-form'
 import { WardrobeGallery } from '@/components/wardrobe-gallery'
+import { OutfitGenerator } from '@/components/outfit-generator'
 
 export default function Home() {
   const scrollToForm = () => {
@@ -83,6 +84,12 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Divider */}
+      <div className="w-full h-px bg-border" aria-hidden="true" />
+
+      {/* Outfit Generator Section */}
+      <OutfitGenerator />
 
       {/* Divider */}
       <div className="w-full h-px bg-border" aria-hidden="true" />
