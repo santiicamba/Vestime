@@ -1,65 +1,13 @@
 'use client'
 
 import Image from 'next/image'
-
-interface ClothingItem {
-  id: string
-  tiprenda: string
-  color: string
-  estilo: string
-  image?: string
-}
+import type { ClothingItem } from '@/lib/types'
 
 interface WardrobeGalleryProps {
   items?: ClothingItem[]
 }
 
-const SAMPLE_ITEMS: ClothingItem[] = [
-  {
-    id: '1',
-    tiprenda: 'Remera',
-    color: 'Negro',
-    estilo: 'Casual',
-    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop',
-  },
-  {
-    id: '2',
-    tiprenda: 'Pantalón',
-    color: 'Azul Oscuro',
-    estilo: 'Casual',
-    image: 'https://images.unsplash.com/photo-1542272604-787c62bde4f5?w=400&h=400&fit=crop',
-  },
-  {
-    id: '3',
-    tiprenda: 'Buzo',
-    color: 'Gris',
-    estilo: 'Deportivo',
-    image: 'https://images.unsplash.com/photo-1556821552-7f41c5d440db?w=400&h=400&fit=crop',
-  },
-  {
-    id: '4',
-    tiprenda: 'Camisa',
-    color: 'Blanco',
-    estilo: 'Formal',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
-  },
-  {
-    id: '5',
-    tiprenda: 'Chaqueta',
-    color: 'Negro',
-    estilo: 'Elegante',
-    image: 'https://images.unsplash.com/photo-1551028719-00167b16ebc5?w=400&h=400&fit=crop',
-  },
-  {
-    id: '6',
-    tiprenda: 'Zapatillas',
-    color: 'Blanco',
-    estilo: 'Casual',
-    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
-  },
-]
-
-export function WardrobeGallery({ items = SAMPLE_ITEMS }: WardrobeGalleryProps) {
+export function WardrobeGallery({ items = [] }: WardrobeGalleryProps) {
   return (
     <section
       id="wardrobe-gallery"
@@ -91,11 +39,12 @@ export function WardrobeGallery({ items = SAMPLE_ITEMS }: WardrobeGalleryProps) 
               >
                 {/* Image Container */}
                 <div className="relative w-full aspect-square bg-card rounded-lg overflow-hidden mb-4 shadow-sm group-hover:shadow-lg transition-all duration-300">
-                  {item.image ? (
+                  {item.imagePreview ? (
                     <Image
-                      src={item.image}
-                      alt={`${item.tiprenda} ${item.color}`}
+                      src={item.imagePreview}
+                      alt={`${item.tipo} ${item.color}`}
                       fill
+                      crossOrigin="anonymous"
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
                       sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     />
@@ -118,7 +67,7 @@ export function WardrobeGallery({ items = SAMPLE_ITEMS }: WardrobeGalleryProps) 
                 {/* Text Content */}
                 <div className="flex flex-col gap-1">
                   <p className="text-foreground font-light text-sm md:text-base group-hover:text-accent-foreground transition-colors duration-300">
-                    {item.tiprenda} <span className="text-muted-foreground">•</span>{' '}
+                    {item.tipo} <span className="text-muted-foreground">•</span>{' '}
                     <span className="text-muted-foreground">{item.color}</span>
                   </p>
                   <p className="text-muted-foreground font-light text-xs md:text-sm group-hover:text-foreground transition-colors duration-300">
