@@ -1,11 +1,19 @@
 'use client'
 
+import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { ClothingUploadForm } from '@/components/clothing-upload-form'
 import { WardrobeGallery } from '@/components/wardrobe-gallery'
 import { OutfitGenerator } from '@/components/outfit-generator'
+import type { ClothingItem } from '@/lib/types'
 
 export default function Home() {
+  const [wardrobe, setWardrobe] = useState<ClothingItem[]>([])
+
+  const handleSave = useCallback((newItems: ClothingItem[]) => {
+    setWardrobe((prev) => [...prev, ...newItems])
+  }, [])
+
   const scrollToForm = () => {
     document.getElementById('upload-form')?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -95,7 +103,7 @@ export default function Home() {
       <div className="w-full h-px bg-border" aria-hidden="true" />
 
       {/* Wardrobe Gallery Section */}
-      <WardrobeGallery />
+      <WardrobeGallery items={wardrobe} />
 
       {/* Divider */}
       <div className="w-full h-px bg-border" aria-hidden="true" />
@@ -106,7 +114,7 @@ export default function Home() {
         className="w-full py-20 md:py-28 px-4 md:px-8 bg-[#f7f7f7] scroll-mt-8"
         aria-label="Formulario de carga de prendas"
       >
-        <ClothingUploadForm />
+        <ClothingUploadForm onSave={handleSave} />
       </section>
 
       {/* Footer */}

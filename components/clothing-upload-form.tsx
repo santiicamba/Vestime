@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { X, Plus, Upload, ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import type { ClothingItem as SharedClothingItem } from '@/lib/types'
 
 const TIPOS_PRENDA = [
   'Remera',
@@ -242,7 +243,11 @@ function ItemCard({ item, index, canRemove, onChange, onRemove }: ItemCardProps)
   )
 }
 
-export function ClothingUploadForm() {
+interface ClothingUploadFormProps {
+  onSave?: (items: SharedClothingItem[]) => void
+}
+
+export function ClothingUploadForm({ onSave }: ClothingUploadFormProps) {
   const [items, setItems] = useState<ClothingItem[]>([createEmptyItem()])
   const [submitted, setSubmitted] = useState(false)
 
@@ -266,8 +271,27 @@ export function ClothingUploadForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Map internal items to the shared ClothingItem type and pass to parent
+    const saved: SharedClothingItem[] = items
+      .filter((item) => item.tipo && item.color && item.estilo)
+      .map((item) => ({
+        id: item.id,
+        tipo: item.tipo,
+        color: item.color,
+        estilo: item.estilo,
+        imagePreview: item.imagePreview,
+      }))
+
+    if (saved.length === 0) return
+
+    onSave?.(saved)
+
+    // Reset form and scroll to gallery
+    setItems([createEmptyItem()])
     setSubmitted(true)
     setTimeout(() => setSubmitted(false), 3000)
+    document.getElementById('wardrobe-gallery')?.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
@@ -313,7 +337,7 @@ export function ClothingUploadForm() {
           size="lg"
           className="w-full sm:w-auto rounded-full px-10 py-6 text-base font-light bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] transition-all duration-300"
         >
-          {submitted ? 'Guardado!' : `Guardar ${items.length > 1 ? `${items.length} prendas` : 'prenda'}`}
+          {submitted ? 'Guardado en el armario!' : `Guardar ${items.length > 1 ? `${items.length} prendas` : 'prenda'}`}
         </Button>
         <span className="text-sm text-[#a0a0a0] font-light">
           {items.length} {items.length === 1 ? 'prenda' : 'prendas'} agregadas
